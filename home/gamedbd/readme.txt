@@ -1,0 +1,1 @@
+./gamedbd gamesys.cof importclsconfig

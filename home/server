@@ -1,0 +1,600 @@
+#!/bin/bash
+
+# Last Updated: 2017/8/28
+# Version: 2.1
+# Name: Perfect World Server Control
+# Description: A script to start and stop the many different domains for a PW server
+# Require: Perfect World server v1.5.3
+
+# create a link to sbin for access from anywhere
+#ln -s /pwserver/server /sbin/server
+
+DATE=`date +%Y-%m-%d-%H-%M-%S`
+
+##### LOCAL VARIABLES #####
+# Server
+ServerDir=/home
+MAPS=$ServerDir/maps
+LogsDir=$ServerDir/logservice/logs
+cpwDir=/var/www/html/CPW
+gl=7 # (max 7) number of glinkd instances to start
+
+# Admin Control Panel root directories (blank "" will not try to load during server start/stop)
+pwAdmin_1="" #http webGUI (tomcat7)
+pwAdmin_2="/usr/local/jakarta/bin" #original webGUI (jakarta) /usr/local/jakarta/bin
+pwAdmin_3="" #IcyTech's pwAdmin
+pwAdmin_4="" #Alex's pwAdmin
+
+# STORAGE directory must exist to use backup
+STORAGE=/media/storage
+BKUPDIR=${STORAGE}/backup
+
+##### MySQL CONFIG USED FOR BACKUP ONLY #####
+USR=root
+PASSWD=root
+DB=pw
+
+# COLOUR SETTINGS #
+B="[40;36m"
+W="[40;37m"
+G="[40;32m"
+R="[40;31m"
+Y="[40;33m"
+P="[40;35m"
+
+function bMaps {
+	echo eWVzLGdzMDEsV29ybGQKeWVzLGlzNjEsQmVnaW5uZXIgV29ybGQgKDEuNS4zKQpubyxpczYyLE9yaWdpbmF0aW9uICgxLjUuMSkKbm8saXMwMSxDaXR5IG9mIEFib21pbmF0aW9ucwpubyxpczAyLFNlY3JldCBQYXNzYWdlCm5vLGlzMDMsbmEKbm8saXMwNCxuYQpubyxpczA1LEZpcmVjcmFnIEdyb3R0bwpubyxpczA2LERlbiBvZiBSYWJpZCBXb2x2ZXMKbm8saXMwNyxDYXZlIG9mIHRoZSBWaWNpb3VzCm5vLGlzMDgsSGFsbCBvZiBEZWNlcHRpb24Kbm8saXMwOSxHYXRlIG9mIERlbGlyaXVtCm5vLGlzMTAsU2VjcmV0IEZyb3N0Y292ZXIKbm8saXMxMSxWYWxsZXkgb2YgRGlzYXN0ZXIKbm8saXMxMixGb3Jlc3QgUnVpbnMKbm8saXMxMyxDYXZlIG9mIFNhZGlzdGljIEdsZWUKbm8saXMxNCxXcmFpdGhnYXRlCm5vLGlzMTUsSGFsbHVjaW5hdG9yeSBUcmVuY2gKbm8saXMxNixFZGVuCm5vLGlzMTcsQnJpbXN0b25lIFBpdApubyxpczE4LFRlbXBsZSBvZiB0aGUgRHJhZ29uCm5vLGlzMTksTmlnaHRzY3JlYW0gSXNsYW5kCm5vLGlzMjAsU25ha2UgSXNsZQpubyxpczIxLExvdGhyYW5pcwpubyxpczIyLE1vbWFnYW5vbgpubyxpczIzLFNlYXQgb2YgVG9ybWVudApubyxpczI0LEFiYWRkb24Kbm8saXMyNSxXYXJzb25nIENpdHkKbm8saXMyNixQYWxhY2Ugb2YgTmlydmFuYQpubyxpczI3LEx1bmFyIEdsYWRlCm5vLGlzMjgsVmFsbGV5IG9mIFJlY2lwcm9jaXR5Cm5vLGlzMjksRnJvc3Rjb3ZlciBDaXR5Cm5vLGlzMzEsVHdpbGlnaHQgVGVtcGxlCm5vLGlzMzIsQ3ViZSBvZiBGYXRlCm5vLGlzMzMsQ2hyb25vIENpdHkKbm8saXMzNCxQZXJmZWN0IENoYXBlbApubyxpczM1LEd1aWxkIEJhc2UKbm8saXMzNyxNb3JhaQpubyxpczM4LFBob2VuaXggVmFsbGV5Cm5vLGlzMzksRW5kbGVzcyBVbml2ZXJzZQpubyxpczQwLEJsaWdodGVkIENoYW1lcgpubyxpczQxLEVuZGxlc3MgVW5pdmVyc2UKbm8saXM0MixOYXRpb24gV2FyIFdhcmdvZCBHdWxjaApubyxpczQzLEZpdmUgRW1wZXJvcnMKbm8saXM0NCxOYXRpb24gV2FyIChGbGFnKQpubyxpczQ1LE5hdGlvbiBXYXIgKENyeXN0YWwpCm5vLGlzNDYsTmF0aW9uIFdhciAoQnJpZGdlKQpubyxpczQ3LFN1bnNldCBWYWxsZXkKbm8saXM0OCxTaHV0dGVyIFBhbGFjZQpubyxpczQ5LERyYWdvbiBIaWRkZW4gRGVuCm5vLGlzNTAsUmVhbG0gb2YgUmVmbGVjdGlvbgpubyxpczYzLFByaW1hbCBXb3JsZApubyxpczY2LEZsb3dzaWx2ZXIgUGFsYWNlCm5vLGlzNjcsVW5kZXJjdXJyZW50IEhhbGwKbm8saXM2OCxQcmltYWwgV29ybGQgKFN0b3J5IE1vZGUpCm5vLGlzNjksTGlnaHRTYWlsIENhdmUKbm8saXM3MCxDdWJlIG9mIEZhdGUgKDIpCm5vLGlzNzEsRHJhZ29uIENvdW5xZXN0IEJhdHRsZWZpZWxkCm5vLGlzNzIsSGVhdmVuZmFsbCBUZW1wbGUgKGJhc2UpCm5vLGlzNzMsSGVhdmVuZmFsbCBUZW1wbGUgKGlzNzMpCm5vLGlzNzQsSGVhdmVuZmFsbCBUZW1wbGUgKGlzNzQpCm5vLGlzNzUsSGVhdmVuZmFsbCBUZW1wbGUgKGlzNzUpCm5vLGlzNzYsVW5jaGFydGVkIFBhcmFkaXNlCm5vLGlzNzcsVGh1cnNkYXkgVG91cm5hbWVudApubyxpczgwLEhvbWVzdGVhZApubyxpczgxLEhvbWVzdGVhZApubyxpczgyLEhvbWVzdGVhZApubyxpczgzLEhvbWVzdGVhZApubyxiZzAxLFRlcnJpdG9yeSBXYXIgVC0zIFB2UApubyxiZzAyLFRlcnJpdG9yeSBXYXIgVC0zIFB2RQpubyxiZzAzLFRlcnJpdG9yeSBXYXIgVC0yIFB2UApubyxiZzA0LFRlcnJpdG9yeSBXYXIgVC0yIFB2RQpubyxiZzA1LFRlcnJpdG9yeSBXYXIgVC0xIFB2UApubyxiZzA2LFRlcnJpdG9yeSBXYXIgVC0xIFB2RQpubyxhcmVuYTAxLEV0aGVyYmxhZGUgQXJlbmEKbm8sYXJlbmEwMixMb3N0IEFyZW5hCm5vLGFyZW5hMDMsUGx1bWUgQXJlbmEKbm8sYXJlbmEwNCxBcmNob3NhdXIgQXJlbmEKbm8scmFuZDAzLFF1aWNrc2FuZCBNYXplIChyYW5kMDMpCm5vLHJhbmQwNCxRdWlja3NhbmQgTWF6ZSAocmFuZDA0KQo= | base64 --decode > $MAPS
+}
+
+function load_maps {
+	if [ ! -f ${MAPS} ]; then
+		bMaps ${MAPS}
+		echo "Maps List Created at $MAPS"
+	fi
+	echo ""
+	echo "Starting Maps in List"
+	readarray tb < ${MAPS}
+	str_map_ids=""
+	for str in "${tb[@]}"; do
+		opt=`echo $str | awk -F',' '{print $1}'`
+		if [[ "$opt" == "yes" ]]; then
+			map_id=`echo $str | awk -F',' '{print $2}'`
+			map_name=`echo $str | awk -F',' '{print $3}'`
+			if [[ "$map_id" != "gs01" ]]; then
+				str_map_ids=" $str_map_ids $map_id"
+			fi
+		fi
+	done
+			
+	{ cd /$ServerDir/gamed; ./gs gs01 gs.conf gmserver.conf gsalias.conf ${str_map_ids} > $LogsDir/gs.log & } &>/dev/null
+	
+	sleep 5
+
+	echo ""
+	freemem=`free -m | grep "Mem:" | awk '{print $4}'`
+	echo $G"MAPS LOADED ${Y}(Memory Available: ${freemem} MB)${W}"
+	echo ""
+}
+
+[[ ! -d $LogsDir ]] && mkdir -p $LogsDir
+
+case ${1} in
+
+"start" )
+	clear
+	
+	if [[ -f "/home/gamed/config/tasks.rar" ]]; then
+		cd /home/gamed/config/
+		unrar e -o+ tasks.rar
+		rm tasks.rar
+	fi
+	
+	if [[ -f "/home/gamed/config/elements.rar" ]]; then
+		cd /home/gamed/config/
+		unrar e -o+ elements.rar
+		rm elements.rar
+	fi
+	
+	arg2=${2}
+	x="true"
+	if [[ ${arg2} == "no-maps" ]]; then
+		x="false"
+		arg2=""
+	fi
+	/$ServerDir/chmod.sh
+	echo ""
+	echo $G"SERVER STARTING "$W"PLEASE WAIT...."
+	echo -ne $B'>                    '$W'(0%)\r'	
+	{ cd /$ServerDir/logservice; ./logservice logservice.conf > $LogsDir/logservice.log & } &> /dev/null
+	sleep 1
+	
+	echo -ne $B'-->                  '$W'(10%)\r'
+	{ cd /$ServerDir/uniquenamed; ./uniquenamed gamesys.conf > $LogsDir/uniquenamed.log & } &> /dev/null
+	sleep 2
+	
+	echo -ne $B'---->                '$W'(20%)\r'
+	{	
+		if [[ -d /$ServerDir/auth ]]; then
+			cd /$ServerDir/auth/build/; ./authd.sh start > $LogsDir/authd.log &
+		elif [[ -d /$ServerDir/authd ]]; then
+			cd /$ServerDir/authd/; ./authd > $LogsDir/authd.log &
+		fi
+	}&> /dev/null
+	sleep 3
+	
+	echo -ne $B'-------->            '$W'(40%)\r'	 
+	{ cd /$ServerDir/gamedbd; ./gamedbd gamesys.conf > $LogsDir/gamedbd.log & } &> /dev/null
+	sleep 2
+	
+	echo -ne $B'---------->          '$W'(50%)\r'
+	{ cd /$ServerDir/gacd; ./gacd gamesys.conf > $LogsDir/gacd.log & } &> /dev/null
+	sleep 2
+	
+	echo -ne $B'------------>        '$W'(60%)\r'
+	{ cd /$ServerDir/gfactiond; ./gfactiond gamesys.conf > $LogsDir/gfactiond.log & }&> /dev/null
+	sleep 2
+	
+	echo -ne $B'-------------->      '$W'(70%)\r'
+	{ cd /$ServerDir/gdeliveryd; ./gdeliveryd gamesys.conf > $LogsDir/gdeliveryd.log & } &> /dev/null
+	sleep 3
+	
+	echo -ne $B'---------------->    '$W'(80%)\r'
+	{
+		for (( v = 1; v <= $gl; v++ )); do
+			cd /$ServerDir/glinkd; ./glinkd gamesys.conf $v > $LogsDir/glinkd${v}.log &
+			sleep 2
+		done
+	}&> /dev/null
+	
+	echo -ne $B'------------------>  '$W'(90%)\r'
+	{
+		if [[ -f /$ServerDir/anti_crash ]]; then
+			cd /$ServerDir; ./anti_crash &
+			sleep 1
+		fi
+	}&> /dev/null
+	echo -ne $B'-------------------->'$W'(100%)\r'
+	echo $G'SERVER STARTED              '$W
+	echo ""
+	
+	strTime=`date +"%a %b %d %I:%M %p"`
+	
+	[[ ${x} != "true" ]] || load_maps
+	
+	if [[ ! -z ${pwAdmin_1} ]] && [[ -d ${pwAdmin_1} ]]; then
+		echo -ne $G'Starting pwAdmin #1                '$W'\r'
+		{
+			service tomcat7 stop
+			sleep 1
+			service tomcat7 start
+			sleep 1
+		}&> /dev/null
+		echo $G'pwAdmin #1 STARTED                 '$W
+		echo ""
+	fi
+	
+	if [[ ! -z ${pwAdmin_2} ]] && [[ -d ${pwAdmin_2} ]]; then
+		echo -ne $G'Starting pwAdmin #2                '$W'\r'
+		{
+			cd ${pwAdmin_2}
+			./shutdown.sh
+			sleep 1
+			./startup.sh
+			sleep 1
+		}&> /dev/null
+		echo $G'pwAdmin #2 STARTED                 '$W
+		echo ""
+	fi
+	
+	if [[ ! -z ${pwAdmin_3} ]] && [[ -d ${pwAdmin_3} ]]; then
+		echo -ne $G'Starting pwAdmin #3                '$W'\r'
+		{
+			cd ${pwAdmin_3}
+			./shutdown.sh
+			sleep 1
+			./startup.sh
+			sleep 1
+		}&> /dev/null
+		echo $G'pwAdmin #3 STARTED                 '$W
+		echo ""
+	fi
+	
+	if [[ ! -z ${pwAdmin_4} ]] && [[ -d ${pwAdmin_4} ]]; then
+		echo -ne $G'Starting pwAdmin #4                '$W'\r'
+		{
+			cd ${pwAdmin_4} && ./pwadmin start
+		}&> /dev/null
+		echo $G'pwAdmin #4 STARTED                 '$W
+		echo ""
+	fi
+	${0} start-chat
+	${0} start-rpk
+	# this outputs a file indicating server online/offline and timestamp for custom launcher
+	#[[ ! -f /var/www/html/avail ]] || echo -n "open;"${strTime} > /var/www/html/avail
+	exit 0
+	;;
+
+"stop" )
+	echo ""
+	echo $R"STOPPING "$W"PLEASE WAIT...."
+	strTime=`date +"%a %b %d %I:%M %p"`
+	# this outputs a file indicating server online/offline and timestamp for custom launcher
+	#[[ ! -f /var/www/html/avail ]] || echo -n "closed;"${strTime} > /var/www/html/avail
+	echo -ne $B'>                    '$W'(1%)\r'
+	{
+		pkill -9 anti_crash
+		pkill -9 logservice
+	}&>/dev/null
+	echo -ne $B'-->                  '$W'(10%)\r'
+	{
+		sleep 1
+		pkill -9 glinkd
+	}&>/dev/null
+	echo -ne $B'------>              '$W'(20%)\r'
+	{	
+		sleep 1
+		pkill -9 gacd
+	}&>/dev/null
+	echo -ne $B'-------->            '$W'(30%)\r'
+	{
+		sleep 1
+		pkill -9 gs
+	}&>/dev/null
+	echo -ne $B'---------->          '$W'(40%)\r'
+	{
+		sleep 1
+		pkill -9 gfactiond
+	}&>/dev/null
+	echo -ne $B'------------>        '$W'(50%)\r'
+	{
+		sleep 1
+		pkill -9 gdeliveryd
+	}&>/dev/null
+	echo -ne $B'-------------->      '$W'(60%)\r'
+	{
+		sleep 1
+		pkill -9 uniquenamed
+	}&>/dev/null
+	echo -ne $B'---------------->    '$W'(70%)\r'
+	{
+		sleep 1
+		pkill -9 gamedbd
+	}&>/dev/null
+	echo -ne $B'------------------>  '$W'(80%)\r'
+	{
+		sleep 1
+		pkill -9 java
+	}&>/dev/null
+	echo -ne $B'-------------------> '$W'(90%)\r'
+	{
+		sleep 1
+		if [[ ! -z ${pwAdmin_1} ]] && [[ -d ${pwAdmin_1} ]]; then
+			service tomcat7 stop
+		fi
+		if [[ ! -z ${pwAdmin_2} ]] && [[ -d ${pwAdmin_2} ]]; then
+			cd ${pwAdmin_2}; ./shutdown.sh
+		fi
+		if [[ ! -z ${pwAdmin_3} ]] && [[ -d ${pwAdmin_3} ]]; then
+			cd ${pwAdmin_3}; ./shutdown.sh
+		fi
+		if [[ ! -z ${pwAdmin_4} ]] && [[ -d ${pwAdmin_4} ]]; then
+			cd ${pwAdmin_4} && ./pwadmin stop
+		fi
+		
+		echo "Clearing Cache"
+		sleep 2
+		echo 3 > /proc/sys/vm/drop_caches
+		sleep 1
+	}&>/dev/null
+	
+	pkill -9 node
+	pkill -9 php
+	
+	echo -ne $B'-------------------->'$W'(100%)\r'
+	echo $R"SERVER STOPPED              "$W
+	echo ""
+	freemem=`free -m | grep "Mem:" | awk '{print $4}'`
+	echo ${Y}"(Memory Available: ${freemem} MB)${W}"
+	echo ""
+	exit 0
+	;;
+
+"restart" )
+	${0} stop
+	sleep 2
+	${0} start
+	;;
+
+"start-map" )
+	if [[ ! -z ${2} ]]; then
+		echo ""
+		echo -ne $G'STARTING MAP '$W $2'\r'
+		{ cd /$ServerDir/gamed; ./gs $2 > $LogsDir/$2.log & } &>/dev/null
+		sleep 3
+		freemem=`free -m | grep "Mem:" | awk '{print $4}'`
+		echo "${G}MAP ${2} LOADED$ {Y}(Memory Available: ${freemem} MB)${W}"
+		#echo $G'MAP LOADED                  '$W
+		echo ""
+	else
+		echo "USAGE : server start-map is62"
+		echo "USAGE : server start-map is62 log"
+	fi
+	exit 0
+	;;
+
+"stop-map" )
+	if [[ ! -z ${2} ]]; then
+		echo ""
+		procID=`ps ax | grep "./gs ${2}" | grep -v 'grep' | awk '{print $1}'`
+		if [[ $procID != "" ]]; then
+			echo -ne "STOPPING MAP ${2}\r"
+			kill -9 $procID
+			sleep 2
+			freemem=`free -m | grep "Mem:" | awk '{print $4}'`
+			echo "MAP ${2} ${R}STOPPED ${Y}(Memory Available: ${freemem} MB)${W}"
+			echo ""
+		else
+			echo "MAP ${2} not found to be running..."
+			echo ""
+		fi
+	else
+		echo "USAGE : server stop-map is62"
+	fi
+	exit 0
+	;;
+
+"backup" )
+	[[ -d ${STORAGE} ]] || mkdir -p ${STORAGE}
+	[[ -d ${BKUPDIR} ]] || mkdir -p ${BKUPDIR}
+	#[[ -d ${BKUPDIR}${ServerDir} ]] || mkdir ${BKUPDIR}${ServerDir}
+	[[ -d ${BKUPDIR}${ServerDir}/gdeliveryd ]] || mkdir -p ${BKUPDIR}${ServerDir}/gdeliveryd
+	[[ -d ${BKUPDIR}${ServerDir}/gamed ]] || mkdir -p ${BKUPDIR}${ServerDir}/gamed
+	[[ -d ${BKUPDIR}${ServerDir}/logservice ]] || mkdir -p ${BKUPDIR}${ServerDir}/logservice
+	[[ -d ${BKUPDIR}${ServerDir}/gamed/config ]] || mkdir -p ${BKUPDIR}${ServerDir}/gamed/config
+	[[ -d ${BKUPDIR}/root ]] || mkdir -p ${BKUPDIR}/root
+	[[ -d ${BKUPDIR}/var ]] || mkdir -p ${BKUPDIR}/var
+	[[ -d /mnt/nfs ]] || mkdir -p /mnt/nfs
+	
+	rsync -az ${ServerDir}/gamedbd ${BKUPDIR}${ServerDir}
+	rsync -az ${ServerDir}/uniquenamed ${BKUPDIR}${ServerDir}
+	
+	cd ${ServerDir}/gamed/config; tbMaps=(`ls -d */`)
+	for dir in "${tbMaps[@]}"; do
+		if [[ -f ${ServerDir}/gamed/config/${dir}/npcgen.data ]]; then
+			[[ -d ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1} ]] || mkdir ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+			cp ${ServerDir}/gamed/config/${dir}/npcgen.data ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+		fi
+		if [[ -f ${ServerDir}/gamed/config/${dir}/path.sev ]]; then
+			[[ -d ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1} ]] || mkdir ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+			cp ${ServerDir}/gamed/config/${dir}/path.sev ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+		fi
+		if [[ -f ${ServerDir}/gamed/config/${dir}/precinct.sev ]]; then
+			[[ -d ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1} ]] || mkdir ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+			cp ${ServerDir}/gamed/config/${dir}/precinct.sev ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+		fi
+		if [[ -f ${ServerDir}/gamed/config/${dir}/region.sev ]]; then
+			[[ -d ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1} ]] || mkdir ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+			cp ${ServerDir}/gamed/config/${dir}/region.sev ${BKUPDIR}${ServerDir}/gamed/config/${dir::-1}
+		fi
+	done
+	echo "Sync gamed/config..."
+	rsync -a -f"- */" -f"+ *" ${ServerDir}/gamed/config/ ${BKUPDIR}${ServerDir}/gamed/config
+	echo "Copy gamed .conf files..."
+	cp ${ServerDir}/gamed/gs.conf ${BKUPDIR}${ServerDir}/gamed/gs.conf
+	cp ${ServerDir}/gamed/ptemplate.conf ${BKUPDIR}${ServerDir}/gamed/ptemplate.conf
+	echo "Copy gdeliveryd .conf files..."
+	cp ${ServerDir}/gdeliveryd/gamesys.conf ${BKUPDIR}${ServerDir}/gdeliveryd/gamesys.conf
+	cp ${ServerDir}/gdeliveryd/sysauctionlist.txt ${BKUPDIR}${ServerDir}/gdeliveryd/sysauctionlist.txt
+	echo "Archiving Log Dir..."
+	{
+		cd $LogsDir
+		tar -cpv * | gzip > ${BKUPDIR}${ServerDir}/logservice/logs.tar.gz
+	}&> /dev/null
+	
+	echo "Copy server ctrl and maps ctrl..."
+	cp ${ServerDir}/server ${BKUPDIR}${ServerDir}/server
+	cp ${ServerDir}/maps ${BKUPDIR}${ServerDir}/maps
+	echo "Copy root dir..."
+	cp /root/* ${BKUPDIR}/root
+	echo "Sync wwww dir..."
+	rsync -az --exclude '*.pck.zip' --exclude '*.pck' --exclude '*.pkx.zip' --exclude '*.pkx' --exclude 'CPW' /var/www ${BKUPDIR}/var
+	
+	echo "Dump MySQL db..."
+	mysqldump -u${USR} -p${PASSWD} ${DB} --routines > ${BKUPDIR}/root/PW_SQL_Backup.sql
+	
+	file=pw_data_backup_${DATE}.tar.gz
+	
+	#if [[ ${2} == "timestamp" ]]; then
+	#	file=pw_data_backup_${DATE}.tar.gz
+	#else
+	#	file=pw_data_backup.tar.gz
+	#fi
+	
+	cd ${BKUPDIR}
+	
+	echo "Set all file permissions to 755..."
+	chmod -R 755 ${BKUPDIR}
+	#chmod -R 777 ${BKUPDIR}/root/PWAdmin
+	
+	echo "Tar full backup..."
+	tar -c *|gzip > ../${file}
+	
+	echo "Mount remote dir..."
+	mount 192.168.2.110:/export/nas5/PWBackup /mnt/nfs
+	echo "Sync backup tar to remote dir..."
+	rsync -az ${STORAGE}/${file} /mnt/nfs
+	echo "Unmount remote dir..."
+	umount -l /mnt/nfs
+	
+	echo "Clean up files..."
+	rm -rf ${BKUPDIR}
+	rm ${STORAGE}/${file}
+
+	cd ${ServerDir}/gamedbd; ./fix.sh
+	
+	echo ""
+	echo "Backup done..."
+	echo ""
+	
+	exit 0
+	;;
+
+"status" )
+	if [ ! -f ${MAPS} ]; then
+		bMaps ${MAPS}
+		echo "Maps List Created at $MAPS"
+		echo ""
+	fi
+	
+	echo $Y"Checking server status...."$W
+	sleep 2
+	if [ "$(pidof ./gs)" ]; then
+		echo $G
+		echo "./GS"
+	else
+		echo $R
+		echo "./GS"
+	fi
+	
+	if [ "$(pidof ./gamedbd)" ]; then
+		echo $G
+		echo "./GAMEDBD"
+	else
+		echo $R
+		echo "./GAMEDBD"
+	fi
+
+	if [ "$(pidof ./gdeliveryd)" ]; then
+		echo $G
+		echo "./GDELIVERY"	
+	else
+		echo $R
+		echo "./GDELIVERY"	
+	fi
+
+	if [ "$(pidof ./gfactiond)" ]; then
+		echo $G
+		echo "./GFACTIOND"
+	else
+		echo $R
+		echo "./GFACTIOND"
+	fi
+	
+	if [ "$(pidof ./java)" ]; then
+		echo $G
+		echo "./AUTHD"
+	else
+		echo $R
+		echo "./AUTHD"
+	fi
+	
+	if [ "$(pidof ./uniquenamed)" ]; then
+		echo $G
+		echo "./UNIQUENAMEDB"
+	else
+		echo $R
+		echo "./UNIQUENAMEDB"
+	fi
+
+	if [ "$(pidof ./glinkd)" ]; then
+		echo $G
+		echo "./GLINKD"
+	else
+		echo $R
+		echo "./GLINKED"
+	fi
+
+	if [ "$(pidof ./gacd)" ]; then
+		echo $G
+		echo "./GACD"
+	else
+		echo $R
+		echo "./GACD"
+	fi
+
+	if [ "$(pidof ./logservice logservice.conf)" ]; then
+		echo $G
+		echo "./LOGSERVICE"
+	else
+		echo $R
+		echo "./LOGSERVICE"
+	fi
+	freemem=`free -m | grep "Mem:" | awk '{print $4}'`
+	msg="Memory Available: ${freemem} MB"
+	echo $Y
+	echo "${msg}"
+	$s5
+	echo $W
+	
+	#service tomcat7 status
+	exit 0
+	;;
+
+"pwAdmin")
+	{
+	kill -9 `ps ax | grep jakarta | awk '{ print $1}'`
+	sleep 2
+	service tomcat7 start
+	} &>/dev/null
+	echo ""
+	echo $G"pwAdmin Started..."$W
+	echo ""
+	;;
+
+"iWeb")
+	{
+	service tomcat7 stop
+	sleep 2
+	/usr/local/jakarta/bin/startup.sh
+	} &>/dev/null
+	echo ""
+	echo $G"iWeb Started..."$W
+	echo ""
+	;;
+	
+"CPW")
+	if [[ ! -z ${2} ]]; then
+		cd ${cpwDir}
+		./cpw ${2} ${3}
+	else
+		${0}
+	fi
+	exit 0
+	;;
+
+"start-rpk")
+	cd ~
+	php rpk.php > rpk.log &
+	exit 0
+	;;
+
+"start-chat")
+	cd ~/wa
+	node server.js > live-chat.log &
+	exit 0
+	;;
+
+* )
+	# USER INPUT SETTINGS #
+	echo ""
+	echo "USAGE : server [OPTION] [ARG]"
+	echo ""
+	echo "OPTIONS :"
+	echo "	start"
+	echo "	stop"
+	echo "	start-map"
+	echo "	stop-map"
+	echo "	status"
+	echo "	backup"
+	echo "	pwAdmin"
+	echo "	iWeb"
+	echo "	CPW [ARGs: new | revision]"
+	echo "	start-rpk"
+	echo "	start-chat"
+	echo ""
+	echo "EDIT \"maps\" file according to which maps to start automatically..."
+	echo ""
+	exit 0
+	;;
+
+esac
