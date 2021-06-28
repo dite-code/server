@@ -76,7 +76,7 @@ async function connectToWhatsApp () {
             const content = data.message.conversation
 			const from = data.participant.split('@')[0]
 			//sendtogame('^ffdd99'+from+': ^ffdd00'+content)
-            sendtogame(from+, content)
+            sendtogame(from, content)
             console.log (from, content, mdata)
 		} 
 		//else console.log (chatUpdate) // see updates (can be archived, pinned etc.)
