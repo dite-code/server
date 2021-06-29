@@ -1365,7 +1365,7 @@
 			<div class="typo-line">
 			<table width="100%">
 			<tr><td width="40%">Live Rank RPK</td><td>:</td><td><?php echo cekproses($proses, "php rpk.php"); ?></td></tr>
-			<tr><td width="40%">Live Chat</td><td>:</td><td><?php echo cekproses($proses, "node live-chat.js"); ?></td></tr>
+			<tr><td width="40%">Live Chat</td><td>:</td><td><?php echo cekproses($proses, "node server.js"); ?></td></tr>
 			
 			</table>
 			
