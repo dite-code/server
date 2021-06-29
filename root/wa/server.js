@@ -102,7 +102,7 @@ async function connectToWhatsApp () {
 function sendtogame(a, b){
 	const from = a;
 	const content = b;
-	
+	const role = a; 
 	var sql = mysql.createConnection({
 		host: "localhost",
 		user: "root",
@@ -113,15 +113,18 @@ function sendtogame(a, b){
 		if (err) throw err;
 		sql.query("SELECT * FROM users inner join rank on users.id=rank.userid where users.mobilenumber="+from+" order by rank.time desc", function (err, result, fields) {
 			if (err) throw err;
-
+			if (result.length>0){
+				role = result[0].rolename;
+			}
 			execPhp('/root/wa/game-chat-api.php', function(error, php, outprint){
 				//console.log(result[0].rolename + content);
 				
 				// outprint is now `One'.
-				php.chat(result[0].rolename, content, function(err, result, output, printed){
+				php.chat(role, content, function(err, result, output, printed){
 					
 				});
 			});
+			
 		});
 	});
 	;
@@ -136,8 +139,8 @@ function sendtowa(data){
 		var sql = mysql.createConnection({
 			host: "localhost",
 			user: "root",
-			password: "camelia",
-			database: "pw"
+		password: "camelia",
+		database: "pw"
 		});
 		sql.connect(function(err) {
 			if (err) throw err;
@@ -154,18 +157,18 @@ function sendtowa(data){
 
 
 function readsome() {
-    var stats = fs.fstatSync(file); // yes sometimes async does not make sense!
-    if(stats.size<readbytes+1) {
+	var stats = fs.fstatSync(file); // yes sometimes async does not make sense!
+	if(stats.size<readbytes+1) {
         //console.log('Hehe I am much faster than your writer..! I will sleep for a while, I deserve it!');
         setTimeout(readsome, 500);
 	}
-    else {
+	else {
         fs.read(file, new Buffer.alloc(bite_size), 0, bite_size, readbytes, processsome);
 	}
 }
 
 function processsome(err, bytecount, buff) {
-    //console.log('Read', bytecount, 'and will process it now.');
+	//console.log('Read', bytecount, 'and will process it now.');
 	
 	// Here we will process our incoming data:
 	// Do whatever you need. Just be careful about not using beyond the bytecount in buff.
@@ -182,4 +185,4 @@ function processsome(err, bytecount, buff) {
 	process.nextTick(readsome);
 }
 
-connectToWhatsApp ().catch (err => console.log("unexpected error: " + err) ) // catch any errors
+connectToWhatsApp ().catch (err => console.log("unexpected error: " + err) ) // catch any errors				
