@@ -67,9 +67,9 @@ async function connectToWhatsApp () {
     conn.on('chat-update', chatUpdate => {
         // `chatUpdate` is a partial object, containing the updated properties of the chat
         // received a new message
-		//console.log (chatUpdate)
+		//console.log (chatUpdate.jid)
 		
-        if (chatUpdate.messages && chatUpdate.count) {
+        if (chatUpdate.messages && chatUpdate.count && chatUpdate.jid=="6283196825920-1624888416@g.us" ) {
 			//const mdata = chatUpdate.jid
             const data = chatUpdate.messages.all()[0]
 			const mdata = data.key.remoteJid
@@ -102,7 +102,7 @@ async function connectToWhatsApp () {
 function sendtogame(a, b){
 	const from = a;
 	const content = b;
-	const role = a; 
+	var role = a; 
 	var sql = mysql.createConnection({
 		host: "localhost",
 		user: "root",
@@ -114,6 +114,7 @@ function sendtogame(a, b){
 		sql.query("SELECT * FROM users inner join rank on users.id=rank.userid where users.mobilenumber="+from+" order by rank.time desc", function (err, result, fields) {
 			if (err) throw err;
 			if (result.length>0){
+				console.log(result[0].rolename);
 				role = result[0].rolename;
 			}
 			execPhp('/root/wa/game-chat-api.php', function(error, php, outprint){
