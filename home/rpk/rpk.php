@@ -2,7 +2,7 @@
 include("packet_class.php");
 $servername = "localhost";
 $username = "root";
-$password = "camelia";
+$password = "Ed2931993@";
 $dbname = "pw";
 
 // Create connection
