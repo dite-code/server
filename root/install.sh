@@ -1,0 +1,53 @@
+apt-get update
+apt-get install -y git
+apt-get install -y wget
+apt-get install -y perl
+apt-get install -y unrar
+apt-get install -y nano
+apt-get install -y mysql-server apache2 openjdk-7-jre php5 php5-mysql php5-curl phpmyadmin libsvn-java
+dpkg --add-architecture i386
+apt-get update
+apt-get -y install lib32z1 lib32ncurses5
+apt-get install -y libgtk2.0-0:i386 libidn11:i386 gstreamer0.10-pulseaudio:i386 gstreamer0.10-plugins-base:i386 gstreamer0.10-plugins-good:i386
+apt-get install -y tomcat7
+
+curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
+bash nodesource_setup.sh
+rm nodesource_setup.sh
+apt-get install -y nodejs
+
+wget https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl
+chmod 777 gdown.pl
+./gdown.pl https://drive.google.com/file/d/1gH2ZohMEBbFwDLU3huDIghMiB-GWu1Dk/view?usp=sharing pw155.rar
+rm gdown.pl
+
+unrar x pw155.rar
+rm pw155.rar
+tar -zxvf ./pw155_pwAdmin.tar.gz -C /
+
+mysql -uroot -pEd2931993@ < /root/db.sql
+
+cd ~
+git clone https://github.com/dite-code/server.git
+cd server
+cp -r * /
+cd ~
+
+
+
+#mysqldump -uroot -pEd2931993@ pw < /root/pw.sql
+
+# install the server
+#apt update
+#apt install mysql-server
+
+# run the wizard
+#mysql_secure_installation
+#mysql
+#mysql> use mysql;
+#mysql> SELECT user,authentication_string,plugin,host FROM mysql.user;
+
+# enable password login
+#mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY 'password';
+#mysql> FLUSH PRIVILEGES;
+#mysql> exit;
