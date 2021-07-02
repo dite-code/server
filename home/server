@@ -563,13 +563,13 @@ case ${1} in
 	;;
 
 "start-rpk")
-	cd ~/rpk
+	cd /home/rpk
 	php rpk.php > rpk.log &
 	exit 0
 	;;
 
 "start-chat")
-	cd ~/wa
+	cd /home/wa
 	node server.js > live-chat.log &
 	exit 0
 	;;

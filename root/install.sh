@@ -1,20 +1,19 @@
-apt-get update
-apt-get install -y git
-apt-get install -y wget
-apt-get install -y perl
-apt-get install -y unrar
-apt-get install -y nano
-apt-get install -y mysql-server apache2 openjdk-7-jre php5 php5-mysql php5-curl phpmyadmin libsvn-java
+#!/bin/bash
+
+# Install Packages required for Perfect World server on Debian 8 and Ubuntu 14
+# Script courtesy of Wrechid...
+
+set -e
+
+apt-get -y update
+apt-get install -y git wget perl unrar nano curl mysql-server apache2 openjdk-7-jre php5 php5-mysql php5-curl phpmyadmin libsvn-java
 dpkg --add-architecture i386
 apt-get update
 apt-get -y install lib32z1 lib32ncurses5
 apt-get install -y libgtk2.0-0:i386 libidn11:i386 gstreamer0.10-pulseaudio:i386 gstreamer0.10-plugins-base:i386 gstreamer0.10-plugins-good:i386
 apt-get install -y tomcat7
 
-curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
-bash nodesource_setup.sh
-rm nodesource_setup.sh
-apt-get install -y nodejs
+
 
 wget https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl
 chmod 777 gdown.pl
@@ -24,15 +23,26 @@ rm gdown.pl
 unrar x pw155.rar
 rm pw155.rar
 tar -zxvf ./pw155_pwAdmin.tar.gz -C /
+rm pw155_pwAdmin.tar.gz
+rm CPW-Setup.rar
+rm extract_PW_tar.sh
+rm inst_Debian8_Ubuntu14.sh
+rm README.txt
 
-mysql -uroot -pEd2931993@ < /root/db.sql
+mysql -uroot -pEd2931993@ < /root/db.sql;
+
+curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
+echo "apt-get install --force-yes -y nodejs" >> nodesource_setup.sh
+bash nodesource_setup.sh > /dev/null;
+rm nodesource_setup.sh;
+
 
 cd ~
-git clone https://github.com/dite-code/server.git
+git clone https://github.com/dite-code/server.git > /dev/null;
 cd server
 cp -r * /
 cd ~
-
+rm -r server
 
 
 #mysqldump -uroot -pEd2931993@ pw < /root/pw.sql
