@@ -13,7 +13,7 @@
 	String db_host = "localhost";
 	String db_port = "3306";
 	String db_user = "root";
-	String db_password = "camelia";
+	String db_password = "Ed2931993@";
 	String db_database = "pw";
 
 	// Type of your items database required for mapping id's to names
