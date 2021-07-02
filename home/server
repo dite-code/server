@@ -563,7 +563,7 @@ case ${1} in
 	;;
 
 "start-rpk")
-	cd ~
+	cd ~/rpk
 	php rpk.php > rpk.log &
 	exit 0
 	;;
