@@ -25,7 +25,7 @@
 	$waktu=time();
 	
 	//Function Koneksi Database
-	$conn = new mysqli("localhost", "root", "camelia", "pw");
+	$conn = new mysqli("localhost", "root", "Ed2931993@", "pw");
 	if ($conn->connect_error) {
 		die("Connection failed: " . $conn->connect_error);
 	}
