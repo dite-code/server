@@ -45,6 +45,9 @@ cp -r * /
 cd ~
 rm -r server
 
+cd /home
+sed -i -e 's/\r$//' server
+
 
 #mysqldump -uroot -pEd2931993@ pw > /root/pw.sql
 

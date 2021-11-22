@@ -17,7 +17,14 @@ var fs = require('fs'),
 
 var execPhp = require('exec-php');
 var mysql = require('mysql');
-var readbytes = Number(fs.readFileSync("bataschat.txt").toString());
+var readbytes = Number("0");
+
+if (fs.existsSync("bataschat.txt")) {
+	var readbytes = Number(fs.readFileSync("bataschat.txt").toString());
+}
+else{
+	fs.writeFileSync("bataschat.txt", "0")
+}
 //console.log(readbytes);
 
 
@@ -38,12 +45,14 @@ const
    processTime,
 } = require("@adiwajshing/baileys")
 
-    const conn = new WAConnection() 
-	conn.on('credentials-updated', () => {
-		const authInfo = conn.base64EncodedAuthInfo()
-		//console.log(`credentials updated!`)
-		fs.writeFileSync('./session.json', JSON.stringify(authInfo, null, '\t'))
-	})
+const conn = new WAConnection() 
+	
+conn.on ('open', () => {
+    // save credentials whenever updated
+    //console.log (`credentials updated!`)
+    const authInfo = conn.base64EncodedAuthInfo() // get all the auth info we need to restore this session
+    fs.writeFileSync('./session.json', JSON.stringify(authInfo, null, '\t')) // save this info to a file
+})
 
 
 async function connectToWhatsApp () {
