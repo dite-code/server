@@ -1,5 +1,5 @@
 @echo off
-set /p Input=Nama Perubahan: 
+set /p txt=Nama Perubahan: 
 git add .
-git commit -m "%Input%"
+git commit -m "%txt%"
 git push
