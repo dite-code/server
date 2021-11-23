@@ -18,8 +18,8 @@
 	$page="dashboard";
 	$serverip="127.0.0.1";
 	$serverport="29000";
-	$openbeta="1 November 2020";
-	$nextmaintenance="8 November 2020";
+	$openbeta="22 November 2021";
+	$nextmaintenance="29 November 2021";
 	$ip=$_SERVER['REMOTE_ADDR'];
 	$tanggal=date("Ymd");
 	$waktu=time();
@@ -28,6 +28,19 @@
 	$conn = new mysqli("localhost", "root", "Ed2931993@", "pw");
 	if ($conn->connect_error) {
 		die("Connection failed: " . $conn->connect_error);
+	}
+	$tabel = "CREATE TABLE IF NOT EXISTS pengunjung (
+		id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		ip VARCHAR(20) NOT NULL,
+		tanggal date NOT NULL,
+		jumlah INT(11) NOT NULL,
+		online INT(11) NOT NULL,
+		time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	)";
+	if ($conn->query($tabel) === TRUE) {
+		print "";
+	} else {
+		print "Error : " . $conn->error;
 	}
 	// Mencek berdasarkan IPnya, apakah user sudah pernah mengakses hari ini
 	$s = mysqli_query($conn,"SELECT * FROM pengunjung WHERE ip='$ip' AND tanggal='$tanggal'");

@@ -48,6 +48,8 @@ rm -r server
 cd /home
 sed -i -e 's/\r$//' server
 
+cd /home/was
+
 
 #mysqldump -uroot -pEd2931993@ pw > /root/pw.sql
 
