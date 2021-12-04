@@ -1,7 +1,7 @@
 <?php
 	// Start the session
 	session_start();
-	
+	//echo $_SERVER['SERVER_NAME'];
 	//include PHP library
 	include_once(dirname(__FILE__) . '/Midtrans.php'); 
 	\Midtrans\Config::$serverKey = 'Mid-server-bGt9EGInTS4dhg9fH81FLbL3';
@@ -67,7 +67,7 @@
 		$ch = curl_init(); 
 		
 		// set url 
-		curl_setopt($ch, CURLOPT_URL, 'pw-nesia.com:8088/?no='.$no.'&isi='.$isi);
+		curl_setopt($ch, CURLOPT_URL, $_SERVER['SERVER_NAME'].':8088/?no='.$no.'&isi='.$isi);
 		
 		// return the transfer as a string 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
@@ -1355,10 +1355,10 @@
 			<table width="100%">
 			<tr><td width="60%">World</td><td>:</td><td><?php echo cekmap($proses, "gs01"); ?></td></tr>
 			<tr><td>Warsong City</td><td>:</td><td><?php echo cekmap($proses, "is25"); ?></td></tr>
-			<tr><td>Morai</td><td>:</td><td><?php echo cekmap($proses, "is37"); ?></td></tr>
 			<tr><td>Titah Dewa</td><td>:</td><td><?php echo cekmap($proses, "is28"); ?></td></tr>
+			<tr><td>Morai</td><td>:</td><td><?php echo cekmap($proses, "is37"); ?></td></tr>
 			<tr><td>Phoenix Valley</td><td>:</td><td><?php echo cekmap($proses, "is38"); ?></td></tr>
-			<tr><td>Endless Universe 1</td><td>:</td><td><?php echo cekmap($proses, "is38"); ?></td></tr>
+			<tr><td>Endless Universe 1</td><td>:</td><td><?php echo cekmap($proses, "is39"); ?></td></tr>
 			<tr><td>Endless Universe 2</td><td>:</td><td><?php echo cekmap($proses, "is41"); ?></td></tr>
 			<tr><td>Primal World</td><td>:</td><td><?php echo cekmap($proses, "is63"); ?></td></tr>
 			<tr><td>Flowsilver Palace</td><td>:</td><td><?php echo cekmap($proses, "is66"); ?></td></tr>

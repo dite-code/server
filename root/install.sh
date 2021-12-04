@@ -48,8 +48,10 @@ rm -r server
 cd /home
 sed -i -e 's/\r$//' server
 
-cd /home/was
-
+cd /home/wa
+sed -i -e 's/\r$//' install.sh
+chmod 777 install.sh
+./install.sh
 
 #mysqldump -uroot -pEd2931993@ pw > /root/pw.sql
 

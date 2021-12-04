@@ -46,6 +46,7 @@ const
 } = require("@adiwajshing/baileys")
 
 const conn = new WAConnection() 
+const { exec } = require("child_process");
 	
 conn.on ('open', () => {
     // save credentials whenever updated
@@ -66,16 +67,22 @@ async function connectToWhatsApp () {
     conn.on('chat-update', chatUpdate => {
         // `chatUpdate` is a partial object, containing the updated properties of the chat
         // received a new message
-		//console.log (chatUpdate)
+		console.log (chatUpdate)
 		
         if (chatUpdate.messages && chatUpdate.count) {
 			//const mdata = chatUpdate.jid
             const data = chatUpdate.messages.all()[0]
+			//console.log(data);
 			const mdata = data.key.remoteJid
-            const content = data.message.conversation
-			const from = data.participant.split('@')[0]
-			sendtogame('^ffdd99'+from+': ^ffdd00'+content)
-            console.log (from, content, mdata)
+            const from = data.participant.split('@')[0]
+			const buff = new Buffer(data.message.conversation);
+			const content = buff.toString('base64');
+			if (mdata=="6281233113454-1616044872@g.us"){
+				//sendtogame('^ffdd99'+from+': ^ffdd00'+content)	
+				sendtogame(from, content)						
+				
+			}
+            //console.log (from, content, mdata)
         } 
 		//else console.log (chatUpdate) // see updates (can be archived, pinned etc.)
     })
@@ -85,7 +92,8 @@ async function connectToWhatsApp () {
 		q = url.parse(req.url, true).query;
 		nomor = q.no + '@s.whatsapp.net';
 		isi = q.isi;
-		if (conn.sendMessage(q.no + '@s.whatsapp.net', q.isi, 'conversation')){
+		if (conn.sendMessage(q.no + '@s.whatsapp.net', q.isi, MessageType.text)){
+			//res.write(nomor);
 			res.write("Sukses");
 		}
 		else{
@@ -97,8 +105,22 @@ async function connectToWhatsApp () {
 }
 
 
-function sendtogame(txt){
-	execPhp('/root/whatsapp/game-chat-api.php', function(error, php, outprint){
+function sendtogame(from, content){
+	exec("php game-chat-api.php "+from+" "+content, (error, stdout, stderr) => {
+		if (error) {
+			console.log(`error: ${error.message}`);
+			return;
+		}
+		if (stderr) {
+			console.log(`stderr: ${stderr}`);
+			return;
+		}
+		console.log(`${stdout}`);
+	});
+}
+
+function sendtogame1(txt){
+	execPhp('game-chat-api.php', function(error, php, outprint){
 		// outprint is now `One'.
     
 		php.chat(txt, function(err, result, output, printed){
@@ -117,7 +139,7 @@ function sendtowa(data){
 	 var sql = mysql.createConnection({
 		 host: "localhost",
 		 user: "root",
-		 password: "camelia",
+		 password: "Ed2931993@",
 		 database: "pw"
 	 });
  	 sql.connect(function(err) {
