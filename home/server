@@ -580,10 +580,12 @@ case ${1} in
 	cd ~/server
 	rm -r server/.git
 	rm -r server/update.bat
-	tar -cvzpf server.tar.gz *
-	tar -zxvf server.tar.gz -C /
+	chmod 777 -R *
+	tar -cvzpf ~/server.tar.gz *
 	cd ~
+	tar -zxvf server.tar.gz -C /
 	rm -rf server
+	rm -rf server.tar.gz
 	echo "tested"
 	exit 0
 	;;
