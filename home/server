@@ -574,6 +574,20 @@ case ${1} in
 	exit 0
 	;;
 
+"update")
+	cd ~
+	git clone https://github.com/dite-code/server.git
+	cd ~/server
+	rm -r server/.git
+	rm -r server/update.bat
+	tar -cvzpf server.tar.gz *
+	tar -zxvf server.tar.gz -C /
+	cd ~
+	rm -rf server
+	echo "tested"
+	exit 0
+	;;
+
 * )
 	# USER INPUT SETTINGS #
 	echo ""
@@ -591,6 +605,7 @@ case ${1} in
 	echo "	CPW [ARGs: new | revision]"
 	echo "	start-rpk"
 	echo "	start-chat"
+	echo "	update"
 	echo ""
 	echo "EDIT \"maps\" file according to which maps to start automatically..."
 	echo ""
